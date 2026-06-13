@@ -1,0 +1,65 @@
+version: "3.8"
+
+services:
+  # Full-Stack Web Application (Express + React)
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - SQL_HOST=postgres
+      - SQL_DB_NAME=enterprise_db
+      - SQL_USER=postgres_user
+      - SQL_PASSWORD=secure_postgres_pass
+      - JWT_SECRET=PRODUCTION_STABLE_E_COMMERCE_KEY_2026_JWT
+    depends_on:
+      - postgres
+      - redis
+      - elasticsearch
+
+  # PostgreSQL Relational Database Server
+  postgres:
+    image: postgres:17-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: enterprise_db
+      POSTGRES_USER: postgres_user
+      POSTGRES_PASSWORD: secure_postgres_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # Redis Cache Instance
+  redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+
+  # Elasticsearch Engine Instance
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+
+volumes:
+  pgdata:
+  redisdata:
+  esdata:
